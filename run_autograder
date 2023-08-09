@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+PROJECT=bracket
+
+# # Configure settings for running SFML Headless
+# export DISPLAY=:1
+# Xvfb :1 -screen 0 1024x768x16 &
+
+# Set up autograder files
+
+#cp -a /autograder/submission/. /autograder/source/
+#tar -xzf /autograder/submission/*.tar.gz -C /autograder/source/
+cp -ar /autograder/source/solutions/starter/. /autograder/source/${PROJECT}/
+cp -ar /autograder/submission/. /autograder/source/${PROJECT}/
+cp -ar /autograder/source/tests/. /autograder/source/${PROJECT}/
+
+cd /autograder/source/${PROJECT}
+
+#cat Makefile Makeappend.mak > Makefinal.mak
+
+make test && ./test -f XML -l unit_scope -k results.xml
+make ${PROJECT} && python3 run_tests.py
+
+python3 xmlparse.py
+
