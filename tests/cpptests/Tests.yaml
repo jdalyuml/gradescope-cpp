@@ -1,0 +1,24 @@
+- program: TestBlank
+  number: "1.0"
+  desc: Tests isMatched() on the empty string
+  weight: 1
+- program: TestLBrace
+  number: "1.1"
+  desc: Tests isMatched() on "{"
+  weight: 1
+- program: TestRBrace
+  number: "1.2"
+  desc: Tests isMatched() on "}"
+  weight: 1
+- program: TestChevrons
+  number: "1.3"
+  desc: Tests isMatched() on "<>"
+  weight: 1
+- program: TestReverse
+  number: "1.4"
+  desc: Tests isMatched() on "><"
+  weight: 1
+- program: TestSequential
+  number: "1.5"
+  desc: Tests isMatched() on "()[]{}<>"
+  weight: 1

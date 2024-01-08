@@ -10,7 +10,7 @@ PROGRAM = bracket
 
 .PHONY: all clean lint
 
-# all isn't first since the students don't have the required test file
+all: $(PROGRAM) $(PROGRAM).a
 
 %.o: %.cpp $(DEPS)
 	$(CC) $(CFLAGS) -c $<
@@ -18,10 +18,8 @@ PROGRAM = bracket
 $(PROGRAM): main.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
 
-test: test.o $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
-
-all: $(PROGRAM) test
+$(PROGRAM).a: $(OBJECTS)
+	ar rcs $@ $^
 
 clean:
 	rm *.o $(PROGRAM)

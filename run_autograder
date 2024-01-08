@@ -16,10 +16,12 @@ cp -ar /autograder/source/tests/. /autograder/source/${PROJECT}/
 
 cd /autograder/source/${PROJECT}
 
-#cat Makefile Makeappend.mak > Makefinal.mak
+make all 2>&1 | tee /autograder/source/${PROJECT}/makeout.txt
+python3 run_tests.py
 
-make test && ./test -f XML -l unit_scope -k results.xml
-make ${PROJECT} && python3 run_tests.py
+cd cpptests
+python3 cpprunner.py
+cd /autograder/source/${PROJECT}
 
 python3 xmlparse.py
 

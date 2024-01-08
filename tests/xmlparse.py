@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from datetime import datetime, timedelta
 import json
 import xml.etree.ElementTree as ET
 
@@ -66,22 +67,64 @@ def Main():
             "extra_data": {},
             "tests": []
         }
+    if 'output' not in py:
+        py['output'] = ''
 
     # Load C++ test results
     try:
-        tree = ET.parse('results.xml')
-        root = tree.getroot()
-        tests = [ParseTest(test) for test in root.findall('TestSuite/TestCase')]
-        suite = TestSuite(tests)
-        encoded = suite.toJSON()
-        cpp = json.loads(encoded)
-        py['tests'].extend(cpp['tests'])
+        with open('/autograder/results/cpptests.json', 'r') as fin:
+            for line in fin:
+                cpp = json.loads(line)
+                #print(cpp['name'])
+                #print(cpp)
+                py['tests'].append(cpp)
+
     except:
-        py['output'] += '\n<font color="red">C++ Autograder test results cannot be opened</font>; there may have been problems compiling the unit tests.'
+        print('C++ Autograder test results cannot be opened')
+        py['output'] += '\n<font color="red">C++ Autograder test results cannot be opened</font>; there may have been problems compiling the unit tests.\n'
     
     # Set's the minimum score to zero in case they have penalties in excess of points earned
     py['score'] = max(sum(float(test['score']) for test in py['tests']), 0)
     
+
+    try:
+        with open('/autograder/submission_metadata.json', 'r') as metain:
+            meta = json.load(metain)
+        # 2023-06-13T21:00:00.000000-07:00
+        TimeFormat = '%Y-%m-%dT%H:%M:%S.%f%z'
+            
+        # These are the important grading settings to change
+        PenaltyPerDay = 0.1 # Percentage lost per day
+        Semigrace = 0.05 # Reduce late penalty if they had a prior on-time submission
+        MaxPenalty = 0.5 # Maximum percent that can be lost for late penalty 
+        Leeway = timedelta(minutes = 10) # Allowance for submitting at the deadline window
+        Grace = timedelta(days = 1) # Don't penalize them if they realize and fix something the morning after
+
+        subdate = datetime.strptime(meta['created_at'], TimeFormat)
+        duedate = datetime.strptime(meta['assignment']['due_date'], TimeFormat)
+        hasOntime = any(datetime.strptime(sub['submission_time'], TimeFormat) < duedate + Leeway for sub in meta['previous_submissions'])
+        truedelta = subdate - duedate
+        delta = truedelta - Leeway
+        if delta < Leeway:
+            py['output'] += 'On time'
+        elif delta < Grace and hasOntime:
+            # Grace submission
+            py['output'] += 'Grace be upon you'
+        else:
+            # late submission
+            penalty = delta.days * PenaltyPerDay
+            if hasOntime:
+                penalty -= Semigrace
+            penalty = 1 - min(penalty, MaxPenalty)
+            oldscore = py['score']
+            newscore = oldscore * penalty
+            py['output'] += f'<font color="red">Late by {truedelta}</font>'
+            py['output'] += f'\nAutograder score reduced {100 * (1 - penalty)} to {100 * penalty}%: {oldscore} -> {newscore}'
+            py['score'] = newscore
+            #py['output'] += f'\nPenalty: {penalty}%'
+    except Exception as ex:
+        py['output'] += '<font color="red">Problem opening metadata</font>\n'
+        py['output'] += str(ex)
     
     with open('/autograder/results/results.json', 'w') as fout:
         # fout.write(suite.toJSON())

@@ -37,8 +37,8 @@ class TestTrial(unittest.TestCase):
         else:
             process = subprocess.run(exec, input=input, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
         # Get actual solution from subprocess
-        errors = ''.join(c for c in process.stderr)
-        actResults = trimOutput(''.join(c for c in process.stdout), mode)
+        errors = process.stderr
+        actResults = trimOutput(process.stdout, mode)
         self.assertEqual(process.returncode, 0, msg=errors)
 
         # Get expected solution
@@ -52,6 +52,8 @@ class TestTrial(unittest.TestCase):
         
         # Check answer
         if MatchMode.StartsWith in mode:
+            if expResults[-1] == '':
+                expResults = expResults[:-1]
             for i, (act, exp) in enumerate(zip(actResults, expResults)):
                 if showInput and input:
                     self.assertEqual(exp, act, msg=f'For input "{input}", difference in output on line {i+1}.\nExpected: "{exp}"\nFound: "{act}"\n')
@@ -157,13 +159,13 @@ class TestTrial(unittest.TestCase):
     @number('3.1')
     def test_start(self):
         "Nazib Dataset, first lines"
-        self.runTrial(inputFile="data/nazib.txt", solFile="expected/nazib.txt", mode=MatchMode.StartsWith | MatchMode.TrimWhitespace)
+        self.runTrial(inputFile="data/nazib.txt", solFile="expected/nazib-start.txt", mode=MatchMode.StartsWith | MatchMode.TrimWhitespace)
     
     @weight(1)
     @number('3.2')
     def test_end(self):
         "Nazib Dataset, last lines"
-        self.runTrial(inputFile="data/nazib.txt", solFile="expected/nazib.txt", mode=MatchMode.EndsWith | MatchMode.TrimWhitespace)
+        self.runTrial(inputFile="data/nazib.txt", solFile="expected/nazib-end.txt", mode=MatchMode.EndsWith | MatchMode.TrimWhitespace)
 
     @weight(3)
     @number('3.3')
