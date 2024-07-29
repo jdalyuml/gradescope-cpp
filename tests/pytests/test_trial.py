@@ -24,7 +24,7 @@ class TestTrial(unittest.TestCase):
     # Configuration Options
     ProgramName = './bracket' # Name of the student's compiled program
 
-    def runTrial(self, args=None, input=None, inputFile=None, expOutput=None, solFile=None, mode=MatchMode.ExactMatch|MatchMode.TrimWhitespace, showInput=True):
+    def runTrial(self, args=None, *, input=None, inputFile=None, expOutput=None, solFile=None, mode=MatchMode.ExactMatch|MatchMode.TrimWhitespace, showInput=True):
         import subprocess
         # Invoke subprocess
         exec = [TestTrial.ProgramName]

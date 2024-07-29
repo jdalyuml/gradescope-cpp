@@ -112,14 +112,19 @@ def Main():
             py['output'] += 'Grace be upon you'
         else:
             # late submission
-            penalty = delta.days * PenaltyPerDay
+            if delta.seconds > 0:
+                days = delta.days + 1
+            else:
+                days = delta.days
+            penalty = days * PenaltyPerDay
             if hasOntime:
                 penalty -= Semigrace
             penalty = 1 - min(penalty, MaxPenalty)
             oldscore = py['score']
             newscore = oldscore * penalty
-            py['output'] += f'<font color="red">Late by {truedelta}</font>'
-            py['output'] += f'\nAutograder score reduced {100 * (1 - penalty)} to {100 * penalty}%: {oldscore} -> {newscore}'
+            pdelta = timedelta(days = truedelta.days, seconds = truedelta.seconds) # Don't print obscene detail, seconds is enough
+            py['output'] += f'<font color="red">Late by {pdelta}</font>'
+            py['output'] += f'\nAutograder score reduced {100 * (1 - penalty)}% to {100 * penalty}%: {oldscore} -> {newscore}'
             py['score'] = newscore
             #py['output'] += f'\nPenalty: {penalty}%'
     except Exception as ex:

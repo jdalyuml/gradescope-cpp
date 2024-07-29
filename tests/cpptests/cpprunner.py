@@ -5,17 +5,18 @@ import yaml
 class CppTest:
     def __init__(self, data:dict):
         self.data = data
-        self.msg = ''
+        self.msg = self.data['desc']
         self.prog = self.data['program']
+        self.timeout = 60 # seconds
 
     def _compile(self):
-        process = subprocess.run([f'make -f MakefileProf.mak {self.prog}.test'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+        process = subprocess.run([f'make -f MakefileProf.mak {self.prog}.test'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True, timeout=self.timeout)
         if process.returncode:
             self.msg += ''.join(c for c in process.stdout)
         return process.returncode == 0
 
     def _execute(self):
-        process = subprocess.run([f'./{self.prog}.test'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+        process = subprocess.run([f'./{self.prog}.test'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True, timeout=self.timeout)
         if process.returncode:
             self.msg += ''.join(c for c in process.stdout)
         return process.returncode == 0
