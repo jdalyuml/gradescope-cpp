@@ -1,27 +1,59 @@
 #!/usr/bin/env bash
 
-PROJECT=bracket
+REP_DIR=/autograder/source
+# REP_DIR=/autograder/gradescope-cpp
+cd $REP_DIR
+# git pull >> gitlog.txt
 
-# # Configure settings for running SFML Headless
-# export DISPLAY=:1
-# Xvfb :1 -screen 0 1024x768x16 &
+COMMON_DIR=${REP_DIR}/common
+cd ${COMMON_DIR}
+# Get project name from submission_metadata.json
+if ! python3 ProjectSelector.py ; then
+    echo "{ \"score\":0, \"output\": \"Could not determine the project submission.  Redo submissions should be submitted with a changes.txt file.\", \"visibility\": \"visible\" }" >> /autograder/results/results.json
+    exit 1
+fi
+source "/autograder/files.cfg"
+
+PROJ_DIR=${REP_DIR}/${PROJ_NUM}
+DEST_DIR=/autograder/playground/
+mkdir ${DEST_DIR}
+
+#cp -ar ${PROJ_DIR} ${DEST_DIR}
+STUDENT_DIR=/autograder/submission/.
+
+
 
 # Set up autograder files
 
-#cp -a /autograder/submission/. /autograder/source/
-#tar -xzf /autograder/submission/*.tar.gz -C /autograder/source/
-cp -ar /autograder/source/solutions/starter/. /autograder/source/${PROJECT}/
-cp -ar /autograder/submission/. /autograder/source/${PROJECT}/
-cp -ar /autograder/source/tests/. /autograder/source/${PROJECT}/
+if [ -d "${STUDENT_DIR}" ]; then
 
-cd /autograder/source/${PROJECT}
+    # Copy starter code
+    STARTER_DIR=${REP_DIR}/${PROJ_NAME}/solutions/starter/.
+    if [ -d "${STARTER_DIR}" ]; then
+        cp -ar ${STARTER_DIR} ${DEST_DIR}
+    fi
+    # Copy common tests
+    cp -ar ${COMMON_DIR}/* ${DEST_DIR}
+    # Copy student submission
+    cp -ar ${STUDENT_DIR} ${DEST_DIR}
+    # Copy specific tests
+    TEST_DIR=${REP_DIR}/${PROJ_NAME}/tests/.
+    cp -ar ${TEST_DIR} ${DEST_DIR}
 
-make all 2>&1 | tee /autograder/source/${PROJECT}/makeout.txt
-python3 run_tests.py
+    # TODO : Lock students
 
-cd cpptests
-python3 cpprunner.py
-cd /autograder/source/${PROJECT}
 
-python3 xmlparse.py
+    # run tests
+    cd ${DEST_DIR}
 
+
+    make all 2>&1 | tee makeout.txt
+    python3 run_tests.py
+    python3 cpprunner.py
+
+    # compile results
+    python3 xmlparse.py
+        
+else
+    echo "{ \"score\":0, \"output\": \"Directory not found: ${PROJ_NUM}\", \"visibility\": \"visible\" }" >> /autograder/results/results.json
+fi
