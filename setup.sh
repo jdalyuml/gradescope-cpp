@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 cd /autograder/
-git clone git@github.com:jdalyuml/gradescope-cpp.git autograder-source
+git clone https://github.com/jdalyuml/gradescope-cpp.git autograder-source
 
 apt-get install -y python3 python3-pip python3-dev libboost-test-dev libboost-regex-dev libboost-date-time-dev valgrind 
 # apt-get install -y libsfml-dev libpulse0 xvfb
