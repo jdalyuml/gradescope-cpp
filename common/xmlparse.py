@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 from datetime import datetime, timedelta
-import json
+import json, os
 import xml.etree.ElementTree as ET
+import Config
 
 class TestResults:
     def __init__(self, name, maxScore, score=None, number = None, msg = ''):
@@ -92,16 +93,23 @@ def Main():
             meta = json.load(metain)
         # 2023-06-13T21:00:00.000000-07:00
         TimeFormat = '%Y-%m-%dT%H:%M:%S.%f%z'
-            
         # These are the important grading settings to change
-        PenaltyPerDay = 0.1 # Percentage lost per day
-        Semigrace = 0.05 # Reduce late penalty if they had a prior on-time submission
-        MaxPenalty = 0.5 # Maximum percent that can be lost for late penalty 
-        Leeway = timedelta(minutes = 10) # Allowance for submitting at the deadline window
-        Grace = timedelta(days = 1) # Don't penalize them if they realize and fix something the morning after
+        PenaltyPerDay = Config.ConfigValue("PenaltyPerDay")
+        Semigrace = Config.ConfigValue('Semigrace') # Reduce late penalty if they had a prior on-time submission
+        MaxPenalty = Config.ConfigValue('MaxPenalty') 
+        Leeway = timedelta(minutes = Config.ConfigValue('Leeway')) # Allowance for submitting at the deadline window
+        Grace = timedelta(days = Config.ConfigValue('Grace')) # Don't penalize them if they realize and fix something the morning after
 
         subdate = datetime.strptime(meta['created_at'], TimeFormat)
         duedate = datetime.strptime(meta['assignment']['due_date'], TimeFormat)
+        for user in meta['users']:
+            duedate = datetime.strptime(user['assignment']['due_date'], TimeFormat)
+        if os.path.exists('psx-resub.json'):
+            with open('psx-resub.json', 'r') as resubin:
+                resubmeta = json.load(resubin)
+                subdate = datetime.strptime(resubmeta['created_at'], TimeFormat)
+                duedate = datetime.strptime(resubmeta['assignment']['due_date'], TimeFormat)
+
         hasOntime = any(datetime.strptime(sub['submission_time'], TimeFormat) < duedate + Leeway for sub in meta['previous_submissions'])
         truedelta = subdate - duedate
         delta = truedelta - Leeway
@@ -122,9 +130,8 @@ def Main():
             penalty = 1 - min(penalty, MaxPenalty)
             oldscore = py['score']
             newscore = oldscore * penalty
-            pdelta = timedelta(days = truedelta.days, seconds = truedelta.seconds) # Don't print obscene detail, seconds is enough
-            py['output'] += f'<font color="red">Late by {pdelta}</font>'
-            py['output'] += f'\nAutograder score reduced {100 * (1 - penalty)}% to {100 * penalty}%: {oldscore} -> {newscore}'
+            py['output'] += f'<font color="red">Late by {truedelta}</font>'
+            py['output'] += f'\nAutograder score reduced {100 * (1 - penalty)} to {100 * penalty}%: {oldscore} -> {newscore}'
             py['score'] = newscore
             #py['output'] += f'\nPenalty: {penalty}%'
     except Exception as ex:

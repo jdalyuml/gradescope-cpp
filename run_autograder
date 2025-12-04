@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-REP_DIR=/autograder/source
-# REP_DIR=/autograder/gradescope-cpp
+REP_DIR=/autograder/autograder-source
 cd $REP_DIR
-# git pull >> gitlog.txt
+git pull >> gitlog.txt
 
 COMMON_DIR=${REP_DIR}/common
 cd ${COMMON_DIR}
