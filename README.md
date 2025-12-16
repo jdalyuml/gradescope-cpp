@@ -2,9 +2,25 @@
 
 A package for autograding multi-file C++ programs on Gradescope.  This allows for unit tests using the Boost Unit Test Framework as well as I/O tests using Python.
 
-As an example, a sample project for bracket matching.  The compiled version for this program solves problem 673 on the [Online Judge](https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&category=8&page=show_problem&problem=614), but the student is also required to implement an `isMatched` function that tests a singled line.  The function will be tested using unit tests in C++ and the complete program will be invoked in Python.
+As an example, there are two sample projects included.  The first project is a "hello world" assignment with a twist; the student has to additionally print a random word selected for them by the autograder.  The students will have to make at least two submissions since they won't know what their personal word is until after they have made a submission.  This will help students acclimate to the idea that it is acceptable to make multiple submissions.
+
+The second sample project is for bracket matching.  The compiled version for this program solves problem 673 on the [Online Judge](https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&category=8&page=show_problem&problem=614), but the student is also required to implement an `isMatched` function that tests a singled line.  The function will be tested using unit tests in C++ and the complete program will be invoked in Python.
+
+
 
 ## Configuration
+
+### Projects
+
+The `common/Projects.cfg` file contains a list of projects and maps the assignment name on Gradescope to a directory in the autograder.  The project names in the `Projects.cfg` file should be lower-case.  Your assignment name on Gradescope can use normal capitalization.  The autograder (through the `common/ProjectSelector.py` script) will take any part of the assignment name before the first ":", convert it to lower-case, and use it to determine which project should be run.
+
+### Late Penalties
+
+The `common/Projects.cfg` file also contains information about late penalties.  The autograder gets submission and deadline times (including any personal extensions) from Gradescope and computes late penalties automatically.  **Late penalties are only applied to the autograded portion**; penalties for the manual portion must be applied manually.
+
+The `PenaltyPerDay` field is how much to deduct for each day or fraction thereof that the submission is late (default -10%), up to the limit set by `MaxPenalty` (default -50%).  The `Leeway` field gives a little window after the nominal deadline where it is not penalized for those students submitting close to the deadline (default 10 minutes).  The autograder also allows for a reduced penalty for students who make their first submission on time but continue working after the deadline.  The `Grace` field is a time window in which a student who has made an on-time submission will receive _no_ late penalty (default 1 day).  If their final submission is after the grace window, they receive the normal late penalty reduced by the amount in the `Semigrace` field (default 5%).  Under the defaults, a student who submits for the first time two days late will receive a -20% penalty whereas a student who had an on-time solution but made their final submission two days late will receive only a -15% penalty.
+
+For group assignments, the behavior is currently undefined if some of them have extensions; it selects one of the student's deadlines arbitrarily.
 
 ### Makefile
 
@@ -22,6 +38,7 @@ The last two tests for `test_make.py` test for linting using [cpplint](https://g
 
 Each lint error costs 1 point, up to the maximum in the `MaxLintPenalty` variable.
 Any error when running `valgrind` deducts points equal to the `ValgrindPenalty` variable.
+You can adjust which lint issues to ignore in the `common/CPPLINT.cfg` file, as is normal for `cpplint`.
 
 ### I/O Tests
 
@@ -35,6 +52,4 @@ The `tests/cpptests` directory contains the C++ [Boost unit tests](https://www.b
 
 The actual test that are run are controlled by the `Tests.yaml` file.  Each test has 4 parts.  `program` is the name of one of the test and should have a corresponding `.cpp` file to go with it.  `number` controls the order that the tests will be displayed in Gradescope.  `desc` is a message that will be printed as part of the results describing the test so that the students can have more information about what the test does.  Finally, `weight` is how many points the test is worth.  A passing test is worth that number of points and a failing test is worth 0 points.  Unlike the Python tests, it is currently not possible to assign partial or negative credit to C++ tests.
 
-### Late Penalties
-The `tests/xmlparse.py` file assembles the results from the prior tests into a single `json` file that Gradescope uses to determine the results.  It contains variables for adjusting the late penalty per day and grace window.  By default, students lose 10% for each day late, up to a maximum of 50%.  The penalty is reduced by 5% if they have an on-time submission.  There is a 10-minute window after the deadline where students will not be penalized for being late and a 1-day window to fix things if they have an on-time submission.  All of these settings are controlled by variables.
 
